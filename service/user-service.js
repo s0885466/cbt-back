@@ -5,7 +5,8 @@ const HttpError = require('./http-error');
 const UserDto = require('../dtos/user-dto');
 const tokenService = require('./token-service');
 const mongoose = require('mongoose');
-const cookieParser = require('cookie-parser');
+
+const SALT = 5;
 
 class UserService {
   async saveUser(email, password, roles) {
@@ -15,8 +16,8 @@ class UserService {
       throw HttpError.CustomError(404, 'User already exists, try it again');
     }
 
-    const hashPassword = await bcrypt.hash(password, 5);
-    const newUser = new UserModel({ email, password: hashPassword, roles });
+    const hashedPassword = await bcrypt.hash(password, SALT);
+    const newUser = new UserModel({ email, password: hashedPassword, roles });
 
     let tokens;
 
@@ -27,7 +28,7 @@ class UserService {
 
       const { refreshToken, accessToken } = tokenService.generateTokens({
         userId: newUser.id,
-        password: hashPassword,
+        email,
       });
 
       await tokenService.saveToken(newUser.id, refreshToken, session);
@@ -43,6 +44,35 @@ class UserService {
     return {
       user: userDto,
       ...tokens,
+    };
+  }
+
+  async login(email, password) {
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      throw HttpError.CustomError(403, 'User is not exists');
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+
+    if (!isValidPassword) {
+      throw HttpError.CustomError(403, 'Email and Password do not match');
+    }
+
+    const { refreshToken, accessToken } = tokenService.generateTokens({
+      userId: user.id,
+      email,
+    });
+
+    await tokenService.saveToken(user.id, refreshToken);
+
+    const userDto = new UserDto(user);
+
+    return {
+      user: userDto,
+      refreshToken,
+      accessToken,
     };
   }
 }

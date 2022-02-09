@@ -19,6 +19,21 @@ class AuthController {
       return next(err);
     }
   }
+
+  async login(req, res, next) {
+    try {
+      const { email, password } = req.body;
+      const { user, refreshToken, accessToken } = await userService.login(
+        email,
+        password
+      );
+
+      res.cookie('refreshToken', refreshToken, { httpOnly: true });
+      res.status(200).json({ user, accessToken: accessToken });
+    } catch (err) {
+      return next(err);
+    }
+  }
 }
 
 module.exports = new AuthController();
