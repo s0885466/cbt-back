@@ -2,6 +2,10 @@ const userService = require('../service/user-service');
 const RoleModel = require('../models/role-model');
 
 class AuthController {
+  setCookieRefreshToken(res, refreshToken) {
+    res.cookie('refreshToken', refreshToken, { httpOnly: true });
+  }
+
   async signup(req, res, next) {
     try {
       const { email, password } = req.body;
@@ -13,7 +17,8 @@ class AuthController {
         roles
       );
 
-      res.cookie('refreshToken', refreshToken, { httpOnly: true });
+      this.setCookieRefreshToken(res, refreshToken);
+
       res.status(201).json({ user, accessToken: accessToken });
     } catch (err) {
       return next(err);
@@ -28,7 +33,8 @@ class AuthController {
         password
       );
 
-      res.cookie('refreshToken', refreshToken, { httpOnly: true });
+      this.setCookieRefreshToken(res, refreshToken);
+
       res.status(200).json({ user, accessToken: accessToken });
     } catch (err) {
       return next(err);
@@ -41,7 +47,8 @@ class AuthController {
 
       const newTokens = await userService.refresh(refreshToken);
 
-      res.cookie('refreshToken', newTokens.refreshToken, { httpOnly: true });
+      this.setCookieRefreshToken(res, newTokens.refreshToken);
+
       res.status(200).json({ accessToken: newTokens.accessToken });
     } catch (err) {
       return next(err);
