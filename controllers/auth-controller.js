@@ -1,5 +1,7 @@
+const { validationResult } = require('express-validator');
 const userService = require('../service/user-service');
 const RoleModel = require('../models/role-model');
+const HttpError = require('../service/http-error');
 
 class AuthController {
   setCookieRefreshToken(res, refreshToken) {
@@ -8,6 +10,12 @@ class AuthController {
 
   async signup(req, res, next) {
     try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return next(HttpError.CustomError(422, 'Invalid email or password'));
+      }
+
       const { email, password } = req.body;
       const role = new RoleModel();
       const roles = [role];
@@ -27,6 +35,12 @@ class AuthController {
 
   async login(req, res, next) {
     try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return next(HttpError.CustomError(422, 'Invalid email or password'));
+      }
+
       const { email, password } = req.body;
       const { user, refreshToken, accessToken } = await userService.login(
         email,
