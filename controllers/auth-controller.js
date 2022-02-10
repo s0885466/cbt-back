@@ -34,6 +34,19 @@ class AuthController {
       return next(err);
     }
   }
+
+  async refresh(req, res, next) {
+    try {
+      const { refreshToken } = req.cookies;
+
+      const newTokens = await userService.refresh(refreshToken);
+
+      res.cookie('refreshToken', newTokens.refreshToken, { httpOnly: true });
+      res.status(200).json({ accessToken: newTokens.accessToken });
+    } catch (err) {
+      return next(err);
+    }
+  }
 }
 
 module.exports = new AuthController();

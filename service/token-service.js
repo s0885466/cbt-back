@@ -11,7 +11,7 @@ class TokenService {
       payload,
       process.env.REFRESH_TOKEN_SECRET_KEY,
       {
-        expiresIn: '10h',
+        expiresIn: '1h',
       }
     );
 
@@ -36,6 +36,19 @@ class TokenService {
     }
 
     return token;
+  }
+
+  validateRefreshToken(refreshToken) {
+    try {
+      const { userId } = jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET_KEY
+      );
+
+      return userId;
+    } catch (err) {
+      return null;
+    }
   }
 }
 

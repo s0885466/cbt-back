@@ -75,6 +75,32 @@ class UserService {
       accessToken,
     };
   }
+
+  async refresh(refreshToken) {
+    if (!refreshToken) {
+      throw HttpError.CustomError(403, 'Token is not exists');
+    }
+    const userId = tokenService.validateRefreshToken(refreshToken);
+
+    if (!userId) {
+      throw HttpError.CustomError(403, 'Token is not valid');
+    }
+
+    const user = await UserModel.findById(userId);
+
+    if (!user) {
+      throw HttpError.CustomError(403, 'User is not exists');
+    }
+
+    const newTokens = tokenService.generateTokens({
+      userId,
+      email: user.email,
+    });
+
+    await tokenService.saveToken(userId, newTokens.refreshToken);
+
+    return newTokens;
+  }
 }
 
 module.exports = new UserService();
