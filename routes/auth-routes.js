@@ -2,7 +2,6 @@ const express = require('express');
 const { check } = require('express-validator');
 
 const authController = require('../controllers/auth-controller');
-const authMiddleware = require('../middlewares/auth-middleware');
 
 const router = express.Router();
 
@@ -18,10 +17,6 @@ router.post(
   check('password').isLength({ min: 6 }),
   authController.login.bind(authController)
 );
-router.get(
-  '/refresh',
-  authMiddleware,
-  authController.refresh.bind(authController)
-);
+router.get('/refresh', authController.refresh.bind(authController));
 
 module.exports = router;
